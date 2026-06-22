@@ -1,9 +1,9 @@
 import mongoose from "mongoose";
 
-const mongodbUrl = process.env.MONGODB_URL;
+const MONGODB_URL = process.env.MONGODB_URL;
 
-if (!mongodbUrl) {
-  throw new Error("DB is not defined");
+if (!MONGODB_URL) {
+  throw new Error("MONGODB_URL is not defined in environment variables");
 }
 
 type MongooseCache = {
@@ -11,22 +11,27 @@ type MongooseCache = {
   promise: Promise<typeof mongoose> | null;
 };
 
+// Prevent multiple connections in Next.js dev/build
 declare global {
   var mongoose: MongooseCache | undefined;
 }
 
-const cached =
-  globalThis.mongoose ?? (globalThis.mongoose = { conn: null, promise: null });
+const cached = globalThis.mongoose ?? (globalThis.mongoose = {
+  conn: null,
+  promise: null,
+});
 
-export const connectDb = async () => {
+export const connectDb = async (): Promise<typeof mongoose> => {
+  // If already connected, reuse it
   if (cached.conn) {
     return cached.conn;
   }
 
+  // If no connection promise exists, create one
   if (!cached.promise) {
-    cached.promise = mongoose
-      .connect(mongodbUrl)
-      .then((mongooseInstance) => mongooseInstance);
+    cached.promise = mongoose.connect(MONGODB_URL).then((mongooseInstance) => {
+      return mongooseInstance;
+    });
   }
 
   cached.conn = await cached.promise;
