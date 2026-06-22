@@ -17,8 +17,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         try {
           await connectDb();
 
-          const email = credentials.email as string;
-          const password = credentials.password as string;
+          const email = credentials?.email as string;
+          const password = credentials?.password as string;
 
           const user = await User.findOne({ email });
 
@@ -42,7 +42,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             mobile: user.mobile,
             role: user.role,
           };
-        } catch {
+        } catch (error) {
+          console.error(error);
           throw new Error("Authorization failed");
         }
       },
@@ -60,23 +61,28 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         try {
           await connectDb();
 
-          let dbUser = await User.findOne({ email: user.email });
+          let existingUser = await User.findOne({
+            email: user.email,
+          });
 
-          if (!dbUser) {
-            dbUser = await User.create({
+          if (!existingUser) {
+            existingUser = new User({
               name: user.name,
               email: user.email,
               image: user.image,
+              mobile: "",
               role: "user",
             });
+
+            await existingUser.save();
           }
 
-          user.id = dbUser._id.toString();
-          user.mobile = dbUser.mobile || "";
-          user.role = dbUser.role;
+          user.id = existingUser._id.toString();
+          user.mobile = existingUser.mobile || "";
+          user.role = existingUser.role || "user";
         } catch (error) {
           console.error("Error during Google sign-in:", error);
-          throw new Error("Google sign-in failed");
+          return false;
         }
       }
 
