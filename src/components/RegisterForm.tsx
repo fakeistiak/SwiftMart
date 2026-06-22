@@ -1,22 +1,49 @@
 "use client";
 import React, { useState } from 'react';
 import { motion } from "motion/react";
-import { FaUser, FaEnvelope, FaLock, FaArrowRightLong } from 'react-icons/fa6';
+import { FaUser, FaEnvelope, FaLock, FaArrowRightLong, FaArrowLeft, FaEye, FaEyeSlash } from 'react-icons/fa6';
+import { FcGoogle } from "react-icons/fc";
 
-function RegisterForm() {
+type propType = {
+  previousStep?: (s: number) => void
+}
+
+function RegisterForm({ previousStep }: propType) {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: ''
   });
+  
+  // State to manage password text visibility
+  const [showPassword, setShowPassword] = useState(false);
+
+  // Form validation logic checking for complete values and proper email format
+  const isFormValid = 
+    formData.name.trim() !== '' && 
+    formData.email.trim() !== '' && 
+    formData.email.includes('@') && 
+    formData.password.length >= 6;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isFormValid) return;
     console.log("Form Submitted:", formData);
   };
 
   return (
-    <div className="w-full min-h-screen flex flex-col items-center justify-center px-4 sm:px-6 bg-slate-50/50">
+    <div className="w-full min-h-screen flex flex-col items-center justify-center px-4 sm:px-6 bg-slate-50/50 relative">
+      
+      {previousStep && (
+        <button
+          onClick={() => previousStep(1)} 
+          className="absolute top-6 left-6 inline-flex items-center gap-2 text-sm font-medium text-primary hover:opacity-80 transition-all duration-200 group cursor-pointer"
+        >
+          <FaArrowLeft className="text-base group-hover:-translate-x-1 transition-transform duration-200" />
+          <span>Back</span>
+        </button>
+      )}
+
       <div className="max-w-md w-full">
         
         {/* Header Section */}
@@ -91,26 +118,61 @@ function RegisterForm() {
                   <FaLock className="text-xs text-slate-400" />
                 </div>
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   required
                   placeholder="••••••••"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all duration-200 bg-slate-50/50"
+                  className="w-full pl-11 pr-12 py-3 rounded-xl border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all duration-200 bg-slate-50/50"
                 />
+                
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 transition-colors duration-150 z-20 cursor-pointer"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <FaEyeSlash className="text-sm" /> : <FaEye className="text-sm" />}
+                </button>
               </div>
             </div>
 
-            {/* Submit Button */}
+            {/* Dynamic Validation Submit Button */}
             <button
               type="submit"
-              className="w-full mt-2 inline-flex items-center justify-center rounded-xl bg-primary px-8 py-3.5 text-sm font-semibold text-white shadow-md shadow-primary/20 hover:bg-secondary transition-all duration-200 group cursor-pointer"
+              disabled={!isFormValid}
+              className={`w-full mt-2 inline-flex items-center justify-center rounded-xl px-8 py-3.5 text-sm font-semibold transition-all duration-200 group ${
+                isFormValid
+                  ? "bg-primary text-white shadow-md shadow-primary/20 hover:bg-secondary cursor-pointer"
+                  : "bg-slate-200 text-slate-400 cursor-not-allowed shadow-none"
+              }`}
             >
               Sign Up
-              <span className="ml-2 group-hover:translate-x-1 transition-transform duration-200">
+              <span className={`ml-2 transition-transform duration-200 ${isFormValid ? "group-hover:translate-x-1" : ""}`}>
                 <FaArrowRightLong />
               </span>
             </button>
+
+            {/* Google Authentication Button */}
+            <button
+              type="button"
+              className="w-full inline-flex items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white px-8 py-3 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 hover:text-slate-900 transition-all duration-200 cursor-pointer"
+            >
+              <FcGoogle className="text-base" />
+              <span>Sign in with Google</span>
+            </button>
+
+            {/* Footer Sign In Redirection Text */}
+            <div className="text-center pt-2 text-sm text-slate-500">
+              Already have an account?{' '}
+              <span 
+                onClick={() => console.log("Navigate to sign in")} // Add routing logic if needed
+                className="text-primary font-semibold hover:text-secondary transition-colors duration-150 cursor-pointer"
+              >
+                Sign In
+              </span>
+            </div>
+
           </form>
         </motion.div>
 
